@@ -288,4 +288,7 @@ int main() {
     cout << "Ket thuc chuong trinh.\n";
     return 0;
 }
-
+ giaiPhong(root);
+    cout << "Ket thuc chuong trinh.\n";
+    return 0;
+}
