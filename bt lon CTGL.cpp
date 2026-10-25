@@ -38,6 +38,7 @@ string nhapChuoi(string thongBao) {
     getline(cin, s);
     return s;
 }
+
  
 Node* taoNode(Sach s) {
     Node* p = new Node;
