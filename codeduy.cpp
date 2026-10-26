@@ -111,5 +111,39 @@ Node* xoaSach(Node* root, string isbn, bool& daXoa) {
     }
     return root;
 }
+void duyetNLR(Node* root) {
+    if (root == NULL) return;
+    inMotSach(root->data);
+    duyetNLR(root->trai);
+    duyetNLR(root->phai);
+}
+ 
+void duyetLNR(Node* root) {
+    if (root == NULL) return;
+    duyetLNR(root->trai);
+    inMotSach(root->data);
+    duyetLNR(root->phai);
+}
+ 
+void duyetLRN(Node* root) {
+    if (root == NULL) return;
+    duyetLRN(root->trai);
+    duyetLRN(root->phai);
+    inMotSach(root->data);
+}
+ 
+void timTheoTen(Node* root, string tuKhoa, int& dem) {
+    if (root == NULL) return;
+    timTheoTen(root->trai, tuKhoa, dem);
+    if (root->data.ten.find(tuKhoa) != string::npos) {
+        inMotSach(root->data);
+        dem++;
+    }
+    timTheoTen(root->phai, tuKhoa, dem);
+}
+ 
+
+
+
  
 
