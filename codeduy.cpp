@@ -141,6 +141,49 @@ void timTheoTen(Node* root, string tuKhoa, int& dem) {
     }
     timTheoTen(root->phai, tuKhoa, dem);
 }
+void timTheoTacGia(Node* root, string tuKhoa, int& dem) {
+    if (root == NULL) return;
+    timTheoTacGia(root->trai, tuKhoa, dem);
+    if (root->data.tacGia.find(tuKhoa) != string::npos) {
+        inMotSach(root->data);
+        dem++;
+    }
+    timTheoTacGia(root->phai, tuKhoa, dem);
+}
+
+int demSach(Node* root) {
+    if (root == NULL) return 0;
+    return 1 + demSach(root->trai) + demSach(root->phai);
+}
+
+int tongSoLuong(Node* root) {
+    if (root == NULL) return 0;
+    return root->data.soLuong
+        + tongSoLuong(root->trai)
+        + tongSoLuong(root->phai);
+}
+
+void capNhatSach(Node* root, string isbn) {
+    Node* p = timKiem(root, isbn);
+    if (p == NULL) {
+        cout << "Khong tim thay sach!\n";
+        return;
+    }
+
+    cout << "Nhap thong tin moi (ISBN duoc giu nguyen).\n";
+    p->data.ten = nhapChuoi("Ten sach: ");
+    p->data.tacGia = nhapChuoi("Tac gia: ");
+    p->data.nhaXuatBan = nhapChuoi("Nha xuat ban: ");
+    p->data.namXuatBan = nhapSoNguyen("Nam xuat ban: ");
+    p->data.soLuong = nhapSoNguyen("So luong: ");
+
+    if (p->data.soLuong < 0) {
+        cout << "So luong am khong hop le, dat ve 0.\n";
+        p->data.soLuong = 0;
+    }
+
+    cout << "Cap nhat thanh cong.\n";
+}
  
 
 
