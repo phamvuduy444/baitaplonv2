@@ -257,4 +257,127 @@ void timTheoTacGia(Node* root, string tuKhoa, int& dem) {
     timTheoTacGia(root->phai, tuKhoa, dem);
 }
 
+int demSach(Node* root) {
+    if (root == NULL) return 0;
+    return 1 + demSach(root->trai) + demSach(root->phai);
+}
 
+int tongSoLuong(Node* root) {
+    if (root == NULL) return 0;
+    return root->data.soLuong + tongSoLuong(root->trai) + tongSoLuong(root->phai);
+}
+
+int tongLuotMuon(Node* root) {
+    if (root == NULL) return 0;
+    return root->data.luotMuon + tongLuotMuon(root->trai) + tongLuotMuon(root->phai);
+}
+
+int demSapHet(Node* root, int nguong) {
+    if (root == NULL) return 0;
+    int dem = (root->data.soLuong <= nguong) ? 1 : 0;
+    return dem + demSapHet(root->trai, nguong) + demSapHet(root->phai, nguong);
+}
+
+void timSachMoiNhatCuNhat(Node* root, Sach*& moiNhat, Sach*& cuNhat) {
+    if (root == NULL) return;
+    if (moiNhat == NULL || root->data.namXuatBan > moiNhat->namXuatBan) moiNhat = &root->data;
+    if (cuNhat == NULL || root->data.namXuatBan < cuNhat->namXuatBan) cuNhat = &root->data;
+    timSachMoiNhatCuNhat(root->trai, moiNhat, cuNhat);
+    timSachMoiNhatCuNhat(root->phai, moiNhat, cuNhat);
+}
+
+void thongKeTheoTacGiaFull(Node* root, map<string, vector<int> >& tk) {
+    if (root == NULL) return;
+    thongKeTheoTacGiaFull(root->trai, tk);
+    tk[root->data.tacGia].resize(3, 0);
+    tk[root->data.tacGia][0]++;
+    tk[root->data.tacGia][1] += root->data.soLuong;
+    tk[root->data.tacGia][2] += root->data.luotMuon;
+    thongKeTheoTacGiaFull(root->phai, tk);
+}
+
+void thongKeTheoNXB(Node* root, map<string, vector<int> >& tk) {
+    if (root == NULL) return;
+    thongKeTheoNXB(root->trai, tk);
+    tk[root->data.nhaXuatBan].resize(3, 0);
+    tk[root->data.nhaXuatBan][0]++;
+    tk[root->data.nhaXuatBan][1] += root->data.soLuong;
+    tk[root->data.nhaXuatBan][2] += root->data.luotMuon;
+    thongKeTheoNXB(root->phai, tk);
+}
+
+int timLuotMuonLonNhat(Node* root) {
+    if (root == NULL) return -1;
+    int maxTrai = timLuotMuonLonNhat(root->trai);
+    int maxPhai = timLuotMuonLonNhat(root->phai);
+    int maxCon = max(maxTrai, maxPhai);
+    return max(root->data.luotMuon, maxCon);
+}
+
+void inSachMuonNhieuNhat(Node* root, int maxMuon, int& dem) {
+    if (root == NULL) return;
+    inSachMuonNhieuNhat(root->trai, maxMuon, dem);
+    if (root->data.luotMuon == maxMuon) {
+        inMotSachBang(root->data);
+        dem++;
+    }
+    inSachMuonNhieuNhat(root->phai, maxMuon, dem);
+}
+
+void hienThiSachMuonNhieuNhat(Node* root) {
+    if (root == NULL) { cout << "Danh muc rong.\n"; return; }
+    int maxMuon = timLuotMuonLonNhat(root);
+    if (maxMuon == 0) {
+        cout << "Chua co sach nao duoc muon.\n";
+        return;
+    }
+    int dem = 0;
+    cout << ">> Sach duoc muon nhieu nhat (" << maxMuon << " luot):\n";
+    inTieuDeBang();
+    inSachMuonNhieuNhat(root, maxMuon, dem);
+    cout << "Tong cong: " << dem << " sach.\n";
+}
+
+void top3MuonNhieuNhat(Node* root) {
+    vector<Sach> ds;
+    thuThapLNR(root, ds);
+    if (ds.empty()) return;
+    for (size_t i = 0; i < ds.size(); ++i)
+        for (size_t j = i + 1; j < ds.size(); ++j)
+            if (ds[j].luotMuon > ds[i].luotMuon)
+                swap(ds[i], ds[j]);
+    int n = (ds.size() < 3) ? (int)ds.size() : 3;
+    cout << "\n--- Top " << n << " sach duoc muon nhieu nhat ---\n";
+    inTieuDeBang();
+    for (int i = 0; i < n; ++i) inMotSachBang(ds[i]);
+}
+
+int timSoLuongLonNhat(Node* root) {
+    if (root == NULL) return -1;
+    int maxTrai = timSoLuongLonNhat(root->trai);
+    int maxPhai = timSoLuongLonNhat(root->phai);
+    int maxCon = max(maxTrai, maxPhai);
+    return max(root->data.soLuong, maxCon);
+}
+
+void inSachSoLuongLonNhat(Node* root, int maxSL, int& dem) {
+    if (root == NULL) return;
+    inSachSoLuongLonNhat(root->trai, maxSL, dem);
+    if (root->data.soLuong == maxSL) {
+        inMotSachBang(root->data);
+        dem++;
+    }
+    inSachSoLuongLonNhat(root->phai, maxSL, dem);
+}
+
+int timSoLuongNhoNhat(Node* root) {
+    if (root == NULL) return -1;
+    int minTrai = timSoLuongNhoNhat(root->trai);
+    int minPhai = timSoLuongNhoNhat(root->phai);
+    int minCon = -1;
+    if (minTrai != -1 && minPhai != -1) minCon = min(minTrai, minPhai);
+    else if (minTrai != -1) minCon = minTrai;
+    else if (minPhai != -1) minCon = minPhai;
+    if (minCon == -1) return root->data.soLuong;
+    return min(root->data.soLuong, minCon);
+}
