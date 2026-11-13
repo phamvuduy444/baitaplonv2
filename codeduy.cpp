@@ -102,4 +102,164 @@ int nhapSoLuongKhongAm() {
         cout << "So luong khong duoc am. Nhap lai!\n";
     }
 }
+// ==================== BST CO B?N ====================
+Node* taoNode(Sach s) {
+    Node* p = new Node;
+    p->data = s;
+    p->trai = NULL;
+    p->phai = NULL;
+    return p;
+}
+
+Node* timKiem(Node* root, string isbn) {
+    if (root == NULL) return NULL;
+    if (isbn == root->data.isbn) return root;
+    if (isbn < root->data.isbn)
+        return timKiem(root->trai, isbn);
+    return timKiem(root->phai, isbn);
+}
+
+Node* themSach(Node* root, Sach s, bool& thanhCong) {
+    if (root == NULL) {
+        thanhCong = true;
+        return taoNode(s);
+    }
+    if (s.isbn < root->data.isbn)
+        root->trai = themSach(root->trai, s, thanhCong);
+    else if (s.isbn > root->data.isbn)
+        root->phai = themSach(root->phai, s, thanhCong);
+    else
+        thanhCong = false;
+    return root;
+}
+
+Node* nutNhoNhat(Node* root) {
+    while (root != NULL && root->trai != NULL)
+        root = root->trai;
+    return root;
+}
+
+Node* xoaSach(Node* root, string isbn, bool& daXoa) {
+    if (root == NULL) return NULL;
+    if (isbn < root->data.isbn) {
+        root->trai = xoaSach(root->trai, isbn, daXoa);
+    } else if (isbn > root->data.isbn) {
+        root->phai = xoaSach(root->phai, isbn, daXoa);
+    } else {
+        daXoa = true;
+        if (root->trai == NULL) {
+            Node* tam = root->phai;
+            delete root;
+            return tam;
+        }
+        if (root->phai == NULL) {
+            Node* tam = root->trai;
+            delete root;
+            return tam;
+        }
+        Node* keTiep = nutNhoNhat(root->phai);
+        root->data = keTiep->data;
+        bool xoaPhu = false;
+        root->phai = xoaSach(root->phai, keTiep->data.isbn, xoaPhu);
+    }
+    return root;
+}
+
+void giaiPhong(Node* root) {
+    if (root == NULL) return;
+    giaiPhong(root->trai);
+    giaiPhong(root->phai);
+    delete root;
+}
+
+// ==================== KI?M TRA TR�NG T�N ====================
+bool daCoTenSach(Node* root, const string& ten) {
+    if (root == NULL) return false;
+    if (toLowerStr(root->data.ten) == toLowerStr(ten)) return true;
+    return daCoTenSach(root->trai, ten) || daCoTenSach(root->phai, ten);
+}
+
+// ==================== IN S�CH ====================
+void inMotSach(Sach s) {
+    cout << "ISBN: " << s.isbn << '\n';
+    cout << "Ten sach: " << s.ten << '\n';
+    cout << "Tac gia: " << s.tacGia << '\n';
+    cout << "Nha xuat ban: " << s.nhaXuatBan << '\n';
+    cout << "Nam xuat ban: " << s.namXuatBan << '\n';
+    cout << "So luong: " << s.soLuong << '\n';
+    cout << "Luot muon: " << s.luotMuon << '\n';
+    cout << "-----------------------------\n";
+}
+
+void inTieuDeBang() {
+    cout << left << setw(12) << "ISBN"
+         << setw(22) << "Ten sach"
+         << setw(18) << "Tac gia"
+         << setw(18) << "Nha xuat ban"
+         << setw(6)  << "Nam"
+         << setw(6)  << "SL"
+         << setw(6)  << "Muon" << '\n';
+    cout << string(88, '-') << '\n';
+}
+
+void inMotSachBang(Sach s) {
+    cout << left << setw(12) << s.isbn
+         << setw(22) << s.ten
+         << setw(18) << s.tacGia
+         << setw(18) << s.nhaXuatBan
+         << setw(6)  << s.namXuatBan
+         << setw(6)  << s.soLuong
+         << setw(6)  << s.luotMuon << '\n';
+}
+
+// ==================== DUY?T ====================
+void duyetNLR(Node* root) {
+    if (root == NULL) return;
+    inMotSach(root->data);
+    duyetNLR(root->trai);
+    duyetNLR(root->phai);
+}
+
+void duyetLRN(Node* root) {
+    if (root == NULL) return;
+    duyetLRN(root->trai);
+    duyetLRN(root->phai);
+    inMotSach(root->data);
+}
+
+void duyetLNRTable(Node* root) {
+    if (root == NULL) return;
+    duyetLNRTable(root->trai);
+    inMotSachBang(root->data);
+    duyetLNRTable(root->phai);
+}
+
+void thuThapLNR(Node* root, vector<Sach>& ds) {
+    if (root == NULL) return;
+    thuThapLNR(root->trai, ds);
+    ds.push_back(root->data);
+    thuThapLNR(root->phai, ds);
+}
+
+// ==================== T�M KI?M ====================
+void timTheoTen(Node* root, string tuKhoa, int& dem) {
+    if (root == NULL) return;
+    timTheoTen(root->trai, tuKhoa, dem);
+    if (toLowerStr(root->data.ten).find(toLowerStr(tuKhoa)) != string::npos) {
+        inMotSach(root->data);
+        dem++;
+    }
+    timTheoTen(root->phai, tuKhoa, dem);
+}
+
+void timTheoTacGia(Node* root, string tuKhoa, int& dem) {
+    if (root == NULL) return;
+    timTheoTacGia(root->trai, tuKhoa, dem);
+    if (toLowerStr(root->data.tacGia).find(toLowerStr(tuKhoa)) != string::npos) {
+        inMotSach(root->data);
+        dem++;
+    }
+    timTheoTacGia(root->phai, tuKhoa, dem);
+}
+
 
