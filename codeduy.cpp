@@ -1,8 +1,17 @@
 #include <iostream>
 #include <string>
 #include <limits>
+#include <iomanip>
+#include <algorithm>
+#include <cctype>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <map>
+#include <ctime>
+
 using namespace std;
- 
+
 struct Sach {
     string isbn;
     string ten;
@@ -10,14 +19,45 @@ struct Sach {
     string nhaXuatBan;
     int namXuatBan;
     int soLuong;
+    int luotMuon;  
 };
- 
+
 struct Node {
     Sach data;
     Node* trai;
     Node* phai;
 };
- 
+
+const string TEN_FILE = "sach.txt";
+
+string trim(const string& s) {
+    size_t start = s.find_first_not_of(" \t\r\n");
+    if (start == string::npos) return "";
+    size_t end = s.find_last_not_of(" \t\r\n");
+    return s.substr(start, end - start + 1);
+}
+
+string toLowerStr(string s) {
+    transform(s.begin(), s.end(), s.begin(), ::tolower);
+    return s;
+}
+
+bool laSo(const string& s) {
+    if (s.empty()) return false;
+    for (size_t i = 0; i < s.size(); ++i)
+        if (!isdigit((unsigned char)s[i])) return false;
+    return true;
+}
+
+int stringToInt(const string& s) {
+    int kq = 0;
+    for (size_t i = 0; i < s.size(); ++i) {
+        if (s[i] >= '0' && s[i] <= '9')
+            kq = kq * 10 + (s[i] - '0');
+    }
+    return kq;
+}
+
 int nhapSoNguyen(string thongBao) {
     int x;
     while (true) {
@@ -31,264 +71,35 @@ int nhapSoNguyen(string thongBao) {
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
 }
- 
-string nhapChuoi(string thongBao) {
+
+string nhapChuoi(string thongBao, bool batBuoc = true) {
     string s;
-    cout << thongBao;
-    getline(cin, s);
-    return s;
-}
- 
-Node* taoNode(Sach s) {
-    Node* p = new Node;
-    p->data = s;
-    p->trai = NULL;
-    p->phai = NULL;
-    return p;
-}
- 
-Node* timKiem(Node* root, string isbn) {
-    if (root == NULL) return NULL;
-    if (isbn == root->data.isbn) return root;
-    if (isbn < root->data.isbn)
-        return timKiem(root->trai, isbn);
-    return timKiem(root->phai, isbn);
+    while (true) {
+        cout << thongBao;
+        getline(cin, s);
+        s = trim(s);
+        if (!batBuoc || !s.empty()) return s;
+        cout << "Khong duoc de trong. Nhap lai!\n";
+    }
 }
 
-void inMotSach(Sach s) {
-    cout << "ISBN: " << s.isbn << '\n';
-    cout << "Ten sach: " << s.ten << '\n';
-    cout << "Tac gia: " << s.tacGia << '\n';
-    cout << "Nha xuat ban: " << s.nhaXuatBan << '\n';
-    cout << "Nam xuat ban: " << s.namXuatBan << '\n';
-    cout << "So luong: " << s.soLuong << '\n';
-    cout << "-----------------------------\n";
-}
- 
-Node* themSach(Node* root, Sach s, bool& thanhCong) {
-    if (root == NULL) {
-        thanhCong = true;
-        return taoNode(s);
+int nhapNamXuatBan() {
+    int namHienTai = 2026;
+    time_t t = time(NULL);
+    tm* now = localtime(&t);
+    if (now) namHienTai = now->tm_year + 1900;
+    while (true) {
+        int nam = nhapSoNguyen("Nam xuat ban: ");
+        if (nam >= 1900 && nam <= namHienTai) return nam;
+        cout << "Nam phai trong khoang 1900 - " << namHienTai << ". Nhap lai!\n";
     }
-    if (s.isbn < root->data.isbn)
-        root->trai = themSach(root->trai, s, thanhCong);
-    else if (s.isbn > root->data.isbn)
-        root->phai = themSach(root->phai, s, thanhCong);
-    else
-        thanhCong = false;
-    return root;
-}
- 
-Node* nutNhoNhat(Node* root) {
-    while (root != NULL && root->trai != NULL)
-        root = root->trai;
-    return root;
-}
- 
-Node* xoaSach(Node* root, string isbn, bool& daXoa) {
-    if (root == NULL) return NULL;
- 
-    if (isbn < root->data.isbn) {
-        root->trai = xoaSach(root->trai, isbn, daXoa);
-    } else if (isbn > root->data.isbn) {
-        root->phai = xoaSach(root->phai, isbn, daXoa);
-    } else {
-        daXoa = true;
-        if (root->trai == NULL) {
-            Node* tam = root->phai;
-            delete root;
-            return tam;
-        }
-        if (root->phai == NULL) {
-            Node* tam = root->trai;
-            delete root;
-            return tam;
-        }
-        Node* keTiep = nutNhoNhat(root->phai);
-        root->data = keTiep->data;
-        bool xoaPhu = false;
-        root->phai = xoaSach(root->phai, keTiep->data.isbn, xoaPhu);
-    }
-    return root;
-}
-void duyetNLR(Node* root) {
-    if (root == NULL) return;
-    inMotSach(root->data);
-    duyetNLR(root->trai);
-    duyetNLR(root->phai);
-}
- 
-void duyetLNR(Node* root) {
-    if (root == NULL) return;
-    duyetLNR(root->trai);
-    inMotSach(root->data);
-    duyetLNR(root->phai);
-}
- 
-void duyetLRN(Node* root) {
-    if (root == NULL) return;
-    duyetLRN(root->trai);
-    duyetLRN(root->phai);
-    inMotSach(root->data);
-}
- 
-void timTheoTen(Node* root, string tuKhoa, int& dem) {
-    if (root == NULL) return;
-    timTheoTen(root->trai, tuKhoa, dem);
-    if (root->data.ten.find(tuKhoa) != string::npos) {
-        inMotSach(root->data);
-        dem++;
-    }
-    timTheoTen(root->phai, tuKhoa, dem);
-}
-void timTheoTacGia(Node* root, string tuKhoa, int& dem) {
-    if (root == NULL) return;
-    timTheoTacGia(root->trai, tuKhoa, dem);
-    if (root->data.tacGia.find(tuKhoa) != string::npos) {
-        inMotSach(root->data);
-        dem++;
-    }
-    timTheoTacGia(root->phai, tuKhoa, dem);
 }
 
-int demSach(Node* root) {
-    if (root == NULL) return 0;
-    return 1 + demSach(root->trai) + demSach(root->phai);
-}
-
-int tongSoLuong(Node* root) {
-    if (root == NULL) return 0;
-    return root->data.soLuong
-        + tongSoLuong(root->trai)
-        + tongSoLuong(root->phai);
-}
-
-void capNhatSach(Node* root, string isbn) {
-    Node* p = timKiem(root, isbn);
-    if (p == NULL) {
-        cout << "Khong tim thay sach!\n";
-        return;
+int nhapSoLuongKhongAm() {
+    while (true) {
+        int sl = nhapSoNguyen("So luong: ");
+        if (sl >= 0) return sl;
+        cout << "So luong khong duoc am. Nhap lai!\n";
     }
-
-    cout << "Nhap thong tin moi (ISBN duoc giu nguyen).\n";
-    p->data.ten = nhapChuoi("Ten sach: ");
-    p->data.tacGia = nhapChuoi("Tac gia: ");
-    p->data.nhaXuatBan = nhapChuoi("Nha xuat ban: ");
-    p->data.namXuatBan = nhapSoNguyen("Nam xuat ban: ");
-    p->data.soLuong = nhapSoNguyen("So luong: ");
-
-    if (p->data.soLuong < 0) {
-        cout << "So luong am khong hop le, dat ve 0.\n";
-        p->data.soLuong = 0;
-    }
-
-    cout << "Cap nhat thanh cong.\n";
 }
- 
-void giaiPhong(Node* root) {
-    if (root == NULL) return;
-    giaiPhong(root->trai);
-    giaiPhong(root->phai);
-    delete root;
-}
- 
-void nhapVaThem(Node*& root) {
-    Sach s;
-    s.isbn = nhapChuoi("ISBN: ");
-    if (s.isbn.empty()) {
-        cout << "ISBN khong duoc de trong!\n";
-        return;
-    }
-    if (timKiem(root, s.isbn) != NULL) {
-        cout << "ISBN da ton tai, khong the them!\n";
-        return;
-    }
-    s.ten = nhapChuoi("Ten sach: ");
-    s.tacGia = nhapChuoi("Tac gia: ");
-    s.nhaXuatBan = nhapChuoi("Nha xuat ban: ");
-    s.namXuatBan = nhapSoNguyen("Nam xuat ban: ");
-    s.soLuong = nhapSoNguyen("So luong: ");
-    if (s.soLuong < 0) {
-        cout << "So luong am khong hop le!\n";
-        return;
-    }
-    bool thanhCong = false;
-    root = themSach(root, s, thanhCong);
-    if (thanhCong) cout << "Them sach thanh cong.\n";
-    else cout << "ISBN da ton tai.\n";
-}
- 
-void hienThiMenu() {
-    cout << "\n===== QUAN LY DANH MUC SACH THU VIEN =====\n";
-    cout << "1. Them sach\n";
-    cout << "2. Tim sach theo ISBN\n";
-    cout << "3. Tim sach theo ten\n";
-    cout << "4. Tim sach theo tac gia\n";
-    cout << "5. Cap nhat sach\n";
-    cout << "6. Xoa sach\n";
-    cout << "7. Hien thi danh sach theo ISBN tang dan (LNR)\n";
-    cout << "8. Duyet cay NLR\n";
-    cout << "9. Duyet cay LRN\n";
-    cout << "10. Thong ke\n";
-    cout << "0. Thoat\n";
-}
- 
-int main() {
-    Node* root = NULL;
-    int chon;
-    do {
-        hienThiMenu();
-        chon = nhapSoNguyen("Nhap lua chon: ");
-        if (chon == 1) {
-            nhapVaThem(root);
-        } else if (chon == 2) {
-            string isbn = nhapChuoi("Nhap ISBN can tim: ");
-            Node* p = timKiem(root, isbn);
-            if (p == NULL) cout << "Khong tim thay sach!\n";
-            else inMotSach(p->data);
-        } else if (chon == 3) {
-            string key = nhapChuoi("Nhap ten hoac tu khoa: ");
-            int dem = 0;
-            timTheoTen(root, key, dem);
-            if (dem == 0) cout << "Khong co sach phu hop.\n";
-        } else if (chon == 4) {
-            string key = nhapChuoi("Nhap ten tac gia hoac tu khoa: ");
-            int dem = 0;
-            timTheoTacGia(root, key, dem);
-            if (dem == 0) cout << "Khong co sach phu hop.\n";
-        } else if (chon == 5) {
-            string isbn = nhapChuoi("Nhap ISBN can cap nhat: ");
-            capNhatSach(root, isbn);
-        } else if (chon == 6) {
-            string isbn = nhapChuoi("Nhap ISBN can xoa: ");
-            bool daXoa = false;
-            root = xoaSach(root, isbn, daXoa);
-            if (daXoa) cout << "Xoa sach thanh cong.\n";
-            else cout << "Khong tim thay ISBN can xoa.\n";
-        } else if (chon == 7) {
-            if (root == NULL) cout << "Danh muc rong.\n";
-            else duyetLNR(root);
-        } else if (chon == 8) {
-            if (root == NULL) cout << "Danh muc rong.\n";
-            else duyetNLR(root);
-        } else if (chon == 9) {
-            if (root == NULL) cout << "Danh muc rong.\n";
-            else duyetLRN(root);
-        } else if (chon == 10) {
-            cout << "So dau sach: " << demSach(root) << '\n';
-            cout << "Tong so ban sach: " << tongSoLuong(root) << '\n';
-        } else if (chon == 0) {
-            cout << "Dang giai phong bo nho...\n";
-        } else {
-            cout << "Lua chon khong hop le!\n";
-        }
-    } while (chon != 0);
-    
-    giaiPhong(root);
-    cout << "Ket thuc chuong trinh.\n";
-    return 0;
-}
-
-
- 
 
