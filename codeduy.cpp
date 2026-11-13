@@ -381,3 +381,121 @@ int timSoLuongNhoNhat(Node* root) {
     if (minCon == -1) return root->data.soLuong;
     return min(root->data.soLuong, minCon);
 }
+void muonSach(Node* root, string isbn, int soLuongMuon) {
+    Node* p = timKiem(root, isbn);
+    if (p == NULL) { cout << "Khong tim thay sach!\n"; return; }
+    if (p->data.soLuong < soLuongMuon) {
+        cout << "Khong du sach de muon. Hien con: " << p->data.soLuong << '\n';
+        return;
+    }
+    p->data.soLuong -= soLuongMuon;
+    p->data.luotMuon += soLuongMuon;
+    cout << "Muon sach thanh cong!\n";
+    cout << "  So luong con lai: " << p->data.soLuong << '\n';
+    cout << "  Tong luot muon: " << p->data.luotMuon << '\n';
+}
+
+void traSach(Node* root, string isbn, int soLuongTra) {
+    Node* p = timKiem(root, isbn);
+    if (p == NULL) { cout << "Khong tim thay sach!\n"; return; }
+    if (soLuongTra > p->data.luotMuon) {
+        cout << "So luong tra (" << soLuongTra << ") vuot qua tong luot muon ("
+             << p->data.luotMuon << ").\n";
+        cout << "Van tiep tuc tra? (y/n): ";
+        string tl; getline(cin, tl);
+        if (trim(tl) != "y" && trim(tl) != "Y") { cout << "Da huy.\n"; return; }
+    }
+    p->data.soLuong += soLuongTra;
+    p->data.luotMuon -= soLuongTra;
+    if (p->data.luotMuon < 0) p->data.luotMuon = 0;
+    cout << "Tra sach thanh cong!\n";
+    cout << "  So luong hien tai: " << p->data.soLuong << '\n';
+    cout << "  Tong luot muon: " << p->data.luotMuon << '\n';
+}
+
+// ==================== C?P NH?T ====================
+void capNhatSach(Node* root, string isbn) {
+    Node* p = timKiem(root, isbn);
+    if (p == NULL) {
+        cout << "Khong tim thay sach!\n";
+        return;
+    }
+    cout << "Nhap thong tin moi (ISBN duoc giu nguyen).\n";
+    p->data.ten = nhapChuoi("Ten sach: ");
+    p->data.tacGia = nhapChuoi("Tac gia: ");
+    p->data.nhaXuatBan = nhapChuoi("Nha xuat ban: ");
+    p->data.namXuatBan = nhapNamXuatBan();
+    p->data.soLuong = nhapSoLuongKhongAm();
+    cout << "Cap nhat thanh cong.\n";
+}
+
+// ==================== FILE TXT ====================
+vector<string> tachCSV(const string& line) {
+    vector<string> res;
+    string token;
+    stringstream ss(line);
+    while (getline(ss, token, ',')) res.push_back(trim(token));
+    return res;
+}
+
+bool docFile(Node*& root, const string& tenFile) {
+    ifstream f(tenFile.c_str());
+    if (!f.is_open()) return false;
+    string line;
+    int dem = 0, loi = 0;
+    while (getline(f, line)) {
+        if (trim(line).empty()) continue;
+        vector<string> p = tachCSV(line);
+        if (p.size() != 7 || !laSo(p[0])) { loi++; continue; }
+        try {
+            Sach s;
+            s.isbn = p[0];
+            s.ten = p[1];
+            s.tacGia = p[2];
+            s.nhaXuatBan = p[3];
+            s.namXuatBan = stringToInt(p[4]);
+            s.soLuong = stringToInt(p[5]);
+            s.luotMuon = stringToInt(p[6]);
+            bool ok = false;
+            root = themSach(root, s, ok);
+            if (ok) dem++; else loi++;
+        } catch (...) { loi++; }
+    }
+    f.close();
+    cout << "Da doc " << dem << " sach tu " << tenFile << " (" << loi << " dong loi).\n";
+    return true;
+}
+
+void luuFile(Node* root, const string& tenFile) {
+    ofstream f(tenFile.c_str());
+    if (!f.is_open()) {
+        cout << "CANH BAO: Khong mo duoc file " << tenFile << " de luu!\n";
+        return;
+    }
+    vector<Sach> ds;
+    thuThapLNR(root, ds);
+    for (size_t i = 0; i < ds.size(); ++i) {
+        f << ds[i].isbn << ',' << ds[i].ten << ',' << ds[i].tacGia << ','
+          << ds[i].nhaXuatBan << ',' << ds[i].namXuatBan << ','
+          << ds[i].soLuong << ',' << ds[i].luotMuon << '\n';
+    }
+    f.close();
+    cout << "Da luu " << ds.size() << " sach vao " << tenFile << ".\n";
+}
+
+// ==================== KH?I T?O D? LI?U M?U (��NG NHU CODE CU) ====================
+void khoiTaoDuLieuMau(Node*& root) {
+    bool thanhCong = false;
+    Sach ds[] = {
+        {"5001", "Sach 50", "Nguyen Van A", "NXB Giao Duc", 2022, 5, 1},
+        {"3002", "Sach 30", "Tran Thi B", "NXB Dai Hoc", 2023, 3, 1},
+        {"7001", "Sach 70", "Le Van C", "NXB Tre", 2021, 4, 0},
+        {"2007", "Sach 20", "Pham Thi D", "NXB Lao Dong", 2020, 7, 3},
+        {"4004", "Sach 40", "Nguyen Van A", "NXB Giao Duc", 2024, 6, 2}
+    };
+    for (int i = 0; i < 5; ++i) {
+        root = themSach(root, ds[i], thanhCong);
+    }
+    cout << "Da khoi tao 5 sach mau (lan dau chay).\n";
+}
+
