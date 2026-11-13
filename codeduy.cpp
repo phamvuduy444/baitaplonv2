@@ -102,7 +102,6 @@ int nhapSoLuongKhongAm() {
         cout << "So luong khong duoc am. Nhap lai!\n";
     }
 }
-// ==================== BST CO B?N ====================
 Node* taoNode(Sach s) {
     Node* p = new Node;
     p->data = s;
@@ -172,14 +171,12 @@ void giaiPhong(Node* root) {
     delete root;
 }
 
-// ==================== KI?M TRA TR�NG T�N ====================
 bool daCoTenSach(Node* root, const string& ten) {
     if (root == NULL) return false;
     if (toLowerStr(root->data.ten) == toLowerStr(ten)) return true;
     return daCoTenSach(root->trai, ten) || daCoTenSach(root->phai, ten);
 }
 
-// ==================== IN S�CH ====================
 void inMotSach(Sach s) {
     cout << "ISBN: " << s.isbn << '\n';
     cout << "Ten sach: " << s.ten << '\n';
@@ -212,7 +209,6 @@ void inMotSachBang(Sach s) {
          << setw(6)  << s.luotMuon << '\n';
 }
 
-// ==================== DUY?T ====================
 void duyetNLR(Node* root) {
     if (root == NULL) return;
     inMotSach(root->data);
@@ -241,7 +237,6 @@ void thuThapLNR(Node* root, vector<Sach>& ds) {
     thuThapLNR(root->phai, ds);
 }
 
-// ==================== T�M KI?M ====================
 void timTheoTen(Node* root, string tuKhoa, int& dem) {
     if (root == NULL) return;
     timTheoTen(root->trai, tuKhoa, dem);
