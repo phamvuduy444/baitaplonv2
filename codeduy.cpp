@@ -413,7 +413,6 @@ void traSach(Node* root, string isbn, int soLuongTra) {
     cout << "  Tong luot muon: " << p->data.luotMuon << '\n';
 }
 
-// ==================== C?P NH?T ====================
 void capNhatSach(Node* root, string isbn) {
     Node* p = timKiem(root, isbn);
     if (p == NULL) {
@@ -429,7 +428,6 @@ void capNhatSach(Node* root, string isbn) {
     cout << "Cap nhat thanh cong.\n";
 }
 
-// ==================== FILE TXT ====================
 vector<string> tachCSV(const string& line) {
     vector<string> res;
     string token;
@@ -483,7 +481,6 @@ void luuFile(Node* root, const string& tenFile) {
     cout << "Da luu " << ds.size() << " sach vao " << tenFile << ".\n";
 }
 
-// ==================== KH?I T?O D? LI?U M?U (��NG NHU CODE CU) ====================
 void khoiTaoDuLieuMau(Node*& root) {
     bool thanhCong = false;
     Sach ds[] = {
@@ -499,3 +496,242 @@ void khoiTaoDuLieuMau(Node*& root) {
     cout << "Da khoi tao 5 sach mau (lan dau chay).\n";
 }
 
+void nhapVaThem(Node*& root) {
+    Sach s;
+    while (true) {
+        s.isbn = nhapChuoi("ISBN: ");
+        if (!laSo(s.isbn)) { cout << "ISBN chi duoc chua chu so!\n"; continue; }
+        break;
+    }
+
+    Node* existingNode = timKiem(root, s.isbn);
+    if (existingNode != NULL) {
+        cout << "ISBN nay da ton tai trong he thong!\n";
+        inMotSach(existingNode->data);
+        char choice;
+        cout << "Ban co muon tang so luong cho sach nay khong? (Y/N): ";
+        cin >> choice;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        
+        if (choice == 'y' || choice == 'Y') {
+            int slThem = nhapSoLuongKhongAm();
+            existingNode->data.soLuong += slThem;
+            cout << "Da tang so luong thanh cong! Tong so luong hien tai: " << existingNode->data.soLuong << '\n';
+        } else {
+            cout << "Huy thao tac them sach.\n";
+        }
+        return;
+    }
+
+    s.ten = nhapChuoi("Ten sach: ");
+
+    if (daCoTenSach(root, s.ten)) {
+        cout << "CANH BAO: Da co sach cung ten trong thu vien!\n";
+        cout << "Van tiep tuc them? (y/n): ";
+        string tl; getline(cin, tl);
+        if (trim(tl) != "y" && trim(tl) != "Y") {
+            cout << "Da huy them sach.\n";
+            return;
+        }
+    }
+
+    s.tacGia = nhapChuoi("Tac gia: ");
+    s.nhaXuatBan = nhapChuoi("Nha xuat ban: ");
+    s.namXuatBan = nhapNamXuatBan();
+    s.soLuong = nhapSoLuongKhongAm();
+    s.luotMuon = 0;
+    
+    bool thanhCong = false;
+    root = themSach(root, s, thanhCong);
+    cout << (thanhCong ? "Them sach thanh cong.\n" : "Them that bai.\n");
+}
+
+void hienThiMenu() {
+    cout << "\n===== QUAN LY DANH MUC SACH THU VIEN =====\n";
+    cout << " 1. Them sach\n";
+    cout << " 2. Tim sach theo ISBN\n";
+    cout << " 3. Tim sach theo ten\n";
+    cout << " 4. Tim sach theo tac gia\n";
+    cout << " 5. Cap nhat sach\n";
+    cout << " 6. Xoa sach theo ISBN\n";
+    cout << " 7. Muon sach\n";
+    cout << " 8. Tra sach\n";
+    cout << " 9. Duyet cay NLR\n";
+    cout << "10. Duyet cay LRN\n";
+    cout << "11. Hien thi dang bang\n";
+    cout << "12. Thong ke tong quan\n";
+    cout << "13. Sach moi nhat / cu nhat\n";
+    cout << "14. Sach co so luong nhieu nhat\n";
+    cout << "15. Sach duoc muon nhieu nhat\n";
+    cout << " 0. Thoat (tu dong luu file)\n";
+}
+
+void xuLyLuaChon(int chon, Node*& root) {
+    switch (chon) {
+    case 1: nhapVaThem(root); break;
+    case 2: {
+        string isbn = nhapChuoi("Nhap ISBN can tim: ");
+        Node* p = timKiem(root, isbn);
+        if (p == NULL) cout << "Khong tim thay sach!\n";
+        else inMotSach(p->data);
+        break;
+    }
+    case 3: {
+        string key = nhapChuoi("Nhap ten hoac tu khoa: ");
+        int dem = 0; timTheoTen(root, key, dem);
+        if (dem == 0) cout << "Khong co sach phu hop.\n";
+        break;
+    }
+    case 4: {
+        string key = nhapChuoi("Nhap ten tac gia hoac tu khoa: ");
+        int dem = 0; timTheoTacGia(root, key, dem);
+        if (dem == 0) cout << "Khong co sach phu hop.\n";
+        break;
+    }
+    case 5: {
+        string isbn = nhapChuoi("Nhap ISBN can cap nhat: ");
+        capNhatSach(root, isbn);
+        break;
+    }
+    case 6: {
+        string isbn = nhapChuoi("Nhap ISBN can xoa: ");
+        cout << "Xac nhan xoa? (y/n): ";
+        string tl; getline(cin, tl);
+        if (trim(tl) != "y" && trim(tl) != "Y") { cout << "Da huy.\n"; break; }
+        bool ok = false;
+        root = xoaSach(root, isbn, ok);
+        cout << (ok ? "Xoa thanh cong.\n" : "Khong tim thay ISBN.\n");
+        break;
+    }
+    case 7: {
+        string isbn = nhapChuoi("Nhap ISBN can muon: ");
+        int sl = nhapSoNguyen("So luong muon: ");
+        if (sl <= 0) { cout << "So luong phai > 0!\n"; break; }
+        muonSach(root, isbn, sl);
+        break;
+    }
+    case 8: {
+        string isbn = nhapChuoi("Nhap ISBN can tra: ");
+        int sl = nhapSoNguyen("So luong tra: ");
+        if (sl <= 0) { cout << "So luong phai > 0!\n"; break; }
+        traSach(root, isbn, sl);
+        break;
+    }
+    case 9:
+        if (root == NULL) cout << "Danh muc rong.\n"; else duyetNLR(root);
+        break;
+    case 10:
+        if (root == NULL) cout << "Danh muc rong.\n"; else duyetLRN(root);
+        break;
+    case 11:
+        if (root == NULL) cout << "Danh muc rong.\n";
+        else { inTieuDeBang(); duyetLNRTable(root); }
+        break;
+    case 12: {
+        if (root == NULL) { cout << "Danh muc rong.\n"; break; }
+        cout << "\n========== THONG KE TONG QUAN ==========\n";
+        int soDauSach = demSach(root);
+        int tongSL = tongSoLuong(root);
+        int tongMuon = tongLuotMuon(root);
+        cout << "\n[1] TONG QUAN\n";
+        cout << "  - So dau sach:            " << soDauSach << '\n';
+        cout << "  - Tong so ban sach:       " << tongSL << '\n';
+        cout << "  - Tong luot muon:         " << tongMuon << '\n';
+        cout << "  - So ban con trong kho:   " << tongSL << '\n';
+        cout << "  - So ban dang duoc muon:  " << tongMuon << '\n';
+
+        int soSapHet = demSapHet(root, 2);
+        int soHetHan = demSapHet(root, 0);
+        cout << "\n[2] TINH TRANG KHO\n";
+        cout << "  - Sach sap het (SL <= 2): " << soSapHet << " dau sach\n";
+        cout << "  - Sach da het (SL = 0):   " << soHetHan << " dau sach\n";
+        if (soDauSach > 0 && (tongSL + tongMuon) > 0) {
+            cout << fixed << setprecision(1);
+            double tiLe = 100.0 * tongMuon / (tongSL + tongMuon);
+            cout << "  - Ti le dang duoc muon:   " << tiLe << "%\n";
+            cout.unsetf(ios::fixed);
+        }
+
+        cout << "\n[3] THONG KE THEO TAC GIA\n";
+        map<string, vector<int> > tkTG;
+        thongKeTheoTacGiaFull(root, tkTG);
+        cout << left << setw(28) << "Tac gia" << setw(10) << "So dau" << setw(12) << "Tong SL" << "Luot muon\n";
+        cout << string(60, '-') << '\n';
+        for (map<string, vector<int> >::iterator it = tkTG.begin(); it != tkTG.end(); ++it) {
+            cout << left << setw(28) << it->first << setw(10) << it->second[0]
+                 << setw(12) << it->second[1] << it->second[2] << '\n';
+        }
+
+        cout << "\n[4] THONG KE THEO NHA XUAT BAN\n";
+        map<string, vector<int> > tkNXB;
+        thongKeTheoNXB(root, tkNXB);
+        cout << left << setw(28) << "Nha xuat ban" << setw(10) << "So dau" << setw(12) << "Tong SL" << "Luot muon\n";
+        cout << string(60, '-') << '\n';
+        for (map<string, vector<int> >::iterator it = tkNXB.begin(); it != tkNXB.end(); ++it) {
+            cout << left << setw(28) << it->first << setw(10) << it->second[0]
+                 << setw(12) << it->second[1] << it->second[2] << '\n';
+        }
+
+        top3MuonNhieuNhat(root);
+
+        cout << "\n[6] THONG KE NOI BAT\n";
+        Sach* moiNhat = NULL; Sach* cuNhat = NULL;
+        timSachMoiNhatCuNhat(root, moiNhat, cuNhat);
+        if (moiNhat) cout << "  - Sach moi nhat:      " << moiNhat->ten << " (" << moiNhat->namXuatBan << ")\n";
+        if (cuNhat)  cout << "  - Sach cu nhat:       " << cuNhat->ten << " (" << cuNhat->namXuatBan << ")\n";
+        int maxSL = timSoLuongLonNhat(root);
+        int minSL = timSoLuongNhoNhat(root);
+        cout << "  - SL nhieu nhat:      " << maxSL << " cuon\n";
+        cout << "  - SL it nhat:         " << minSL << " cuon\n";
+        if (tongMuon == 0) cout << "  - Chua co sach nao duoc muon.\n";
+        else {
+            int maxMuon = timLuotMuonLonNhat(root);
+            cout << "  - Luot muon cao nhat: " << maxMuon << " luot\n";
+        }
+        cout << "\n=========================================\n";
+        break;
+    }
+    case 13: {
+        if (root == NULL) { cout << "Danh muc rong.\n"; break; }
+        Sach* moiNhat = NULL; Sach* cuNhat = NULL;
+        timSachMoiNhatCuNhat(root, moiNhat, cuNhat);
+        cout << ">> Sach moi nhat:\n"; inMotSach(*moiNhat);
+        cout << ">> Sach cu nhat:\n"; inMotSach(*cuNhat);
+        break;
+    }
+    case 14: {
+        if (root == NULL) { cout << "Danh muc rong.\n"; break; }
+        int maxSL = timSoLuongLonNhat(root);
+        int dem = 0;
+        cout << ">> Sach co so luong nhieu nhat (" << maxSL << " cuon):\n";
+        inTieuDeBang();
+        inSachSoLuongLonNhat(root, maxSL, dem);
+        cout << "Tong cong: " << dem << " sach.\n";
+        break;
+    }
+    case 15: hienThiSachMuonNhieuNhat(root); break;
+    case 0: cout << "Dang luu du lieu va giai phong bo nho...\n"; break;
+    default: cout << "Lua chon khong hop le!\n";
+    }
+}
+
+int main() {
+    Node* root = NULL;
+
+    if (!docFile(root, TEN_FILE)) {
+        khoiTaoDuLieuMau(root);
+        luuFile(root, TEN_FILE);
+    }
+
+    int chon;
+    do {
+        hienThiMenu();
+        chon = nhapSoNguyen("Nhap lua chon: ");
+        xuLyLuaChon(chon, root);
+    } while (chon != 0);
+
+    luuFile(root, TEN_FILE);
+    giaiPhong(root);
+    cout << "Ket thuc chuong trinh.\n";
+    return 0;
+}
